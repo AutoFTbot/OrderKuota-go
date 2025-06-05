@@ -7,4 +7,6 @@ require (
 	github.com/stretchr/testify v1.8.4
 )
 
+require github.com/AutoFTbot/OrderKuota-go v1.0.0 // indirect
+
 // +heroku goVersion go1.21

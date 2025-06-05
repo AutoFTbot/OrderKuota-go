@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/autoftbot/orderkuota-go/qris"
 )
@@ -30,24 +31,34 @@ func main() {
 	}
 
 	// Simpan QR code ke file
-	err = qrCode.Save("qris.png")
+	err = qrCode.WriteFile(256, "qris.png")
 	if err != nil {
 		log.Fatalf("Error saving QR code: %v", err)
 	}
 
 	fmt.Println("QR Code berhasil dibuat dan disimpan sebagai qris.png")
+	fmt.Println("Silahkan scan QR code untuk melakukan pembayaran...")
 
-	// Cek status pembayaran
-	status, err := qrisInstance.CheckPaymentStatus("TRX123", 1000)
-	if err != nil {
-		log.Fatalf("Error checking payment status: %v", err)
-	}
+	// Cek status pembayaran secara berulang
+	for {
+		status, err := qrisInstance.CheckPaymentStatus("TRX123", 1000)
+		if err != nil {
+			log.Printf("Error checking payment status: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
 
-	fmt.Printf("Status Pembayaran: %s\n", status.Status)
-	if status.Status == "PAID" {
-		fmt.Printf("Amount: %d\n", status.Amount)
-		fmt.Printf("Reference: %s\n", status.Reference)
-		fmt.Printf("Date: %s\n", status.Date)
-		fmt.Printf("Brand: %s\n", status.BrandName)
+		fmt.Printf("Status Pembayaran: %s\n", status.Status)
+		if status.Status == "PAID" {
+			fmt.Printf("Pembayaran berhasil!\n")
+			fmt.Printf("Amount: %d\n", status.Amount)
+			fmt.Printf("Reference: %s\n", status.Reference)
+			fmt.Printf("Date: %s\n", status.Date)
+			fmt.Printf("Brand: %s\n", status.BrandName)
+			break
+		}
+
+		// Tunggu 5 detik sebelum cek lagi
+		time.Sleep(5 * time.Second)
 	}
 } 

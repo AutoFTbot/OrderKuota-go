@@ -70,6 +70,16 @@ func (q *QRIS) generateQRISString(data QRISData) (string, error) {
 		return "", errors.New("format QRIS tidak valid")
 	}
 
+	// Pastikan base string dimulai dengan "000201"
+	if !strings.HasPrefix(parts[0], "000201") {
+		parts[0] = "000201" + parts[0]
+	}
+
+	// Pastikan base string berisi merchant ID
+	if !strings.Contains(parts[0], q.config.MerchantID) {
+		parts[0] = parts[0] + "5902" + q.config.MerchantID
+	}
+
 	qrString := parts[0] + amountTag + "5802ID" + parts[1]
 
 	// Generate CRC
