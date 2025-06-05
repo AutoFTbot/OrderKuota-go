@@ -41,6 +41,7 @@ func main() {
 
 	// Cek status pembayaran secara berulang
 	for {
+		fmt.Println("\nMengecek status pembayaran...")
 		status, err := qrisInstance.CheckPaymentStatus("TRX123", 1000)
 		if err != nil {
 			log.Printf("Error checking payment status: %v", err)
@@ -48,14 +49,20 @@ func main() {
 			continue
 		}
 
+		// Tampilkan detail status
 		fmt.Printf("Status Pembayaran: %s\n", status.Status)
+		fmt.Printf("Amount yang diharapkan: %d\n", 1000)
+		fmt.Printf("Amount yang diterima: %d\n", status.Amount)
+		fmt.Printf("Reference: %s\n", status.Reference)
+		
 		if status.Status == "PAID" {
 			fmt.Printf("Pembayaran berhasil!\n")
-			fmt.Printf("Amount: %d\n", status.Amount)
-			fmt.Printf("Reference: %s\n", status.Reference)
 			fmt.Printf("Date: %s\n", status.Date)
 			fmt.Printf("Brand: %s\n", status.BrandName)
+			fmt.Printf("Buyer Ref: %s\n", status.BuyerRef)
 			break
+		} else {
+			fmt.Println("Menunggu pembayaran...")
 		}
 
 		// Tunggu 5 detik sebelum cek lagi
