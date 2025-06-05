@@ -1,5 +1,7 @@
 # 🚀 QRIS Payment Package for Go
 
+![Go](https://github.com/AutoFTbot/OrderKuota-go/actions/workflows/go.yml/badge.svg)
+
 A Go package that provides QRIS (Quick Response Code Indonesian Standard) payment integration for your applications.
 Package Go yang menyediakan integrasi pembayaran QRIS (Quick Response Code Indonesian Standard) untuk aplikasi Anda.
 
