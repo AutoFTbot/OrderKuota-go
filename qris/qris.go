@@ -6,9 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
-
 	"github.com/skip2/go-qrcode"
+	"image/color"
 )
 
 // QRISConfig stores the configuration for QRIS operations.
@@ -79,8 +78,8 @@ func (q *QRIS) GenerateQRCode(data QRISData) (*qrcode.QRCode, error) {
 
 	// Set QR code options
 	qrCode.DisableBorder = false
-	qrCode.ForegroundColor = qrcode.Black
-	qrCode.BackgroundColor = qrcode.White
+	qrCode.ForegroundColor = color.Black
+	qrCode.BackgroundColor = color.White
 
 	return qrCode, nil
 }
