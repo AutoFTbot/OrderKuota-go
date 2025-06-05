@@ -149,7 +149,10 @@ func main() {
 	}
 
 	// Buat instance QRIS
-	qrisInstance := qris.NewQRIS(config)
+	qrisInstance, err := qris.NewQRIS(config)
+	if err != nil {
+		panic(err)
+	}
 
 	// Generate QR Code
 	data := qris.QRISData{
