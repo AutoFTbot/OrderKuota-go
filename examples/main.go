@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/AutoFTbot/OrderKuota-go/qris"
+	"github.com/autoftbot/orderkuota-go/qris"
 )
 
 func main() {
