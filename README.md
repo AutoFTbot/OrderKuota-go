@@ -232,4 +232,4 @@ Silakan kirim pull request. Untuk perubahan besar, harap buka issue terlebih dah
 
 ## 📄 License / Lisensi
 
-[MIT](https://choosealicense.com/licenses/mit/) 
+[AutoFtBot](https://github.com/AutoFTbot/OrderKuota-go/blob/main/LICENSE) 
