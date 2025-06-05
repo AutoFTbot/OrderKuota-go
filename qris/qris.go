@@ -142,4 +142,3 @@ func (q *QRIS) ValidateQRISString(qrString string) bool {
 	crc := q.generateCRC(qrString[:len(qrString)-4])
 	return crc == qrString[len(qrString)-4:]
 } 
-} 
