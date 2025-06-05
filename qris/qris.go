@@ -64,23 +64,17 @@ func (q *QRIS) generateQRISString(data QRISData) (string, error) {
 	amountStr := fmt.Sprintf("%d", data.Amount)
 	amountTag := fmt.Sprintf("54%02d%s", len(amountStr), amountStr)
 
+	// Hapus CRC yang ada di base string dan ganti 010211 dengan 010212
+	baseString := q.config.BaseQrString[:len(q.config.BaseQrString)-4]
+	baseString = strings.Replace(baseString, "010211", "010212", 1)
+
 	// Insert nominal ke base string
-	parts := strings.Split(q.config.BaseQrString, "5802ID")
-	if len(parts) != 2 {
+	insertPosition := strings.Index(baseString, "5802ID")
+	if insertPosition == -1 {
 		return "", errors.New("format QRIS tidak valid")
 	}
 
-	// Pastikan base string dimulai dengan "000201"
-	if !strings.HasPrefix(parts[0], "000201") {
-		parts[0] = "000201" + parts[0]
-	}
-
-	// Pastikan base string berisi merchant ID
-	if !strings.Contains(parts[0], q.config.MerchantID) {
-		parts[0] = parts[0] + "5902" + q.config.MerchantID
-	}
-
-	qrString := parts[0] + amountTag + "5802ID" + parts[1]
+	qrString := baseString[:insertPosition] + amountTag + baseString[insertPosition:]
 
 	// Generate CRC
 	crc := q.generateCRC(qrString)
