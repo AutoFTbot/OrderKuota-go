@@ -1,12 +1,9 @@
 package qris
 
 import (
-	"bytes"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/skip2/go-qrcode"
 )
@@ -22,16 +19,6 @@ type QRISConfig struct {
 type QRISData struct {
 	Amount        int64  // Nominal pembayaran
 	TransactionID string // ID transaksi unik
-}
-
-// PaymentStatus menyimpan status pembayaran
-type PaymentStatus struct {
-	Status    string // Status pembayaran (PAID/UNPAID)
-	Amount    int64  // Nominal pembayaran
-	Reference string // Referensi pembayaran
-	Date      string // Tanggal pembayaran (jika PAID)
-	BrandName string // Nama brand pembayar (jika PAID)
-	BuyerRef  string // Referensi pembeli (jika PAID)
 }
 
 // QRIS adalah struct utama untuk operasi QRIS
@@ -106,17 +93,6 @@ func (q *QRIS) generateCRC(data string) string {
 	return fmt.Sprintf("%04X", crc)
 }
 
-// CheckPaymentStatus mengecek status pembayaran
-func (q *QRIS) CheckPaymentStatus(reference string, amount int64) (*PaymentStatus, error) {
-	// TODO: Implementasi cek status pembayaran ke payment gateway
-	// Untuk sementara return status UNPAID
-	return &PaymentStatus{
-		Status:    "UNPAID",
-		Amount:    amount,
-		Reference: reference,
-	}, nil
-}
-
 // ValidateQRISString memvalidasi format string QRIS
 func (q *QRIS) ValidateQRISString(qrString string) bool {
 	if len(qrString) < 20 {
@@ -141,4 +117,4 @@ func (q *QRIS) ValidateQRISString(qrString string) bool {
 	// Validasi CRC
 	crc := q.generateCRC(qrString[:len(qrString)-4])
 	return crc == qrString[len(qrString)-4:]
-} 
+}

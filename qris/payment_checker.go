@@ -10,19 +10,12 @@ import (
 
 // PaymentStatus menyimpan status pembayaran
 type PaymentStatus struct {
-	Success bool        `json:"success"`
-	Data    *StatusData `json:"data,omitempty"`
-	Error   string      `json:"error,omitempty"`
-}
-
-// StatusData menyimpan detail status pembayaran
-type StatusData struct {
-	Status     string  `json:"status"`
-	Amount     float64 `json:"amount"`
-	Reference  string  `json:"reference"`
-	Date       string  `json:"date,omitempty"`
-	BrandName  string  `json:"brand_name,omitempty"`
-	BuyerRef   string  `json:"buyer_reff,omitempty"`
+	Status    string // Status pembayaran (PAID/UNPAID)
+	Amount    int64  // Nominal pembayaran
+	Reference string // Referensi pembayaran
+	Date      string // Tanggal pembayaran (jika PAID)
+	BrandName string // Nama brand pembayar (jika PAID)
+	BuyerRef  string // Referensi pembeli (jika PAID)
 }
 
 // PaymentCheckerConfig menyimpan konfigurasi untuk pengecekan pembayaran
@@ -49,33 +42,25 @@ func NewPaymentChecker(config PaymentCheckerConfig) *PaymentChecker {
 }
 
 // CheckPaymentStatus mengecek status pembayaran
-func (p *PaymentChecker) CheckPaymentStatus(reference string, amount float64) (*PaymentStatus, error) {
+func (q *QRIS) CheckPaymentStatus(reference string, amount int64) (*PaymentStatus, error) {
 	if reference == "" || amount <= 0 {
-		return &PaymentStatus{
-			Success: false,
-			Error:   "Reference dan amount harus diisi dengan benar",
-		}, nil
+		return nil, fmt.Errorf("reference dan amount harus diisi dengan benar")
 	}
 
 	// Buat URL untuk request
-	url := fmt.Sprintf("%s/api/mutasi/qris/%s/%s", p.config.BaseURL, p.config.MerchantID, p.config.APIKey)
+	url := fmt.Sprintf("https://gateway.okeconnect.com/api/mutasi/qris/%s/%s", q.config.MerchantID, q.config.APIKey)
 
 	// Buat request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return &PaymentStatus{
-			Success: false,
-			Error:   fmt.Sprintf("Gagal membuat request: %v", err),
-		}, nil
+		return nil, fmt.Errorf("gagal membuat request: %v", err)
 	}
 
 	// Kirim request
-	resp, err := p.client.Do(req)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
-		return &PaymentStatus{
-			Success: false,
-			Error:   fmt.Sprintf("Gagal mengirim request: %v", err),
-		}, nil
+		return nil, fmt.Errorf("gagal mengirim request: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -94,26 +79,20 @@ func (p *PaymentChecker) CheckPaymentStatus(reference string, amount float64) (*
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return &PaymentStatus{
-			Success: false,
-			Error:   fmt.Sprintf("Gagal parse response: %v", err),
-		}, nil
+		return nil, fmt.Errorf("gagal parse response: %v", err)
 	}
 
 	if response.Status != "success" || len(response.Data) == 0 {
 		return &PaymentStatus{
-			Success: true,
-			Data: &StatusData{
-				Status:    "UNPAID",
-				Amount:    amount,
-				Reference: reference,
-			},
+			Status:    "UNPAID",
+			Amount:    amount,
+			Reference: reference,
 		}, nil
 	}
 
 	// Cari transaksi yang sesuai
 	for _, tx := range response.Data {
-		txAmount, _ := strconv.ParseFloat(tx.Amount, 64)
+		txAmount, _ := strconv.ParseInt(tx.Amount, 10, 64)
 		txDate, _ := time.Parse(time.RFC3339, tx.Date)
 		timeDiff := time.Since(txDate)
 
@@ -123,25 +102,19 @@ func (p *PaymentChecker) CheckPaymentStatus(reference string, amount float64) (*
 			timeDiff <= 5*time.Minute {
 
 			return &PaymentStatus{
-				Success: true,
-				Data: &StatusData{
-					Status:    "PAID",
-					Amount:    txAmount,
-					Reference: tx.IssuerRef,
-					Date:      tx.Date,
-					BrandName: tx.BrandName,
-					BuyerRef:  tx.BuyerRef,
-				},
+				Status:    "PAID",
+				Amount:    txAmount,
+				Reference: tx.IssuerRef,
+				Date:      tx.Date,
+				BrandName: tx.BrandName,
+				BuyerRef:  tx.BuyerRef,
 			}, nil
 		}
 	}
 
 	return &PaymentStatus{
-		Success: true,
-		Data: &StatusData{
-			Status:    "UNPAID",
-			Amount:    amount,
-			Reference: reference,
-		},
+		Status:    "UNPAID",
+		Amount:    amount,
+		Reference: reference,
 	}, nil
-} 
+}
