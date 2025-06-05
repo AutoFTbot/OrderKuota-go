@@ -101,15 +101,16 @@ func (q *QRIS) CheckPaymentStatus(reference string, amount int64) (*PaymentStatu
 		BuyerRef    string `json:"buyer_reff"`
 	}
 
+	now := time.Now()
 	for _, tx := range response.Data {
-		txAmount, _ := strconv.ParseInt(tx.Amount, 10, 64)
+		txAmount, _ := strconv.Atoi(tx.Amount) // Gunakan Atoi seperti parseInt di JavaScript
 		txDate, _ := time.Parse(time.RFC3339, tx.Date)
-		timeDiff := time.Since(txDate)
+		timeDiff := now.Sub(txDate)
 
-		if txAmount == amount &&
+		if int64(txAmount) == amount &&
 			tx.QRIS == "static" &&
 			tx.Type == "CR" &&
-			timeDiff <= 30*time.Minute { // Ubah ke 30 menit
+			timeDiff <= 5*time.Minute { // Kembali ke 5 menit seperti di NPM
 
 			matchingTransactions = append(matchingTransactions, tx)
 		}
@@ -128,10 +129,10 @@ func (q *QRIS) CheckPaymentStatus(reference string, amount int64) (*PaymentStatu
 			}
 		}
 
-		txAmount, _ := strconv.ParseInt(latestTx.Amount, 10, 64)
+		txAmount, _ := strconv.Atoi(latestTx.Amount)
 		return &PaymentStatus{
 			Status:    "PAID",
-			Amount:    txAmount,
+			Amount:    int64(txAmount),
 			Reference: latestTx.IssuerRef,
 			Date:      latestTx.Date,
 			BrandName: latestTx.BrandName,
