@@ -91,6 +91,16 @@ func (q *QRIS) CheckPaymentStatus(reference string, amount int64) (*PaymentStatu
 	}
 
 	// Cari transaksi yang sesuai
+	var matchingTransactions []struct {
+		Amount      string `json:"amount"`
+		Date        string `json:"date"`
+		QRIS        string `json:"qris"`
+		Type        string `json:"type"`
+		IssuerRef   string `json:"issuer_reff"`
+		BrandName   string `json:"brand_name"`
+		BuyerRef    string `json:"buyer_reff"`
+	}
+
 	for _, tx := range response.Data {
 		txAmount, _ := strconv.ParseInt(tx.Amount, 10, 64)
 		txDate, _ := time.Parse(time.RFC3339, tx.Date)
@@ -99,17 +109,34 @@ func (q *QRIS) CheckPaymentStatus(reference string, amount int64) (*PaymentStatu
 		if txAmount == amount &&
 			tx.QRIS == "static" &&
 			tx.Type == "CR" &&
-			timeDiff <= 5*time.Minute {
+			timeDiff <= 30*time.Minute { // Ubah ke 30 menit
 
-			return &PaymentStatus{
-				Status:    "PAID",
-				Amount:    txAmount,
-				Reference: tx.IssuerRef,
-				Date:      tx.Date,
-				BrandName: tx.BrandName,
-				BuyerRef:  tx.BuyerRef,
-			}, nil
+			matchingTransactions = append(matchingTransactions, tx)
 		}
+	}
+
+	if len(matchingTransactions) > 0 {
+		// Ambil transaksi terbaru
+		latestTx := matchingTransactions[0]
+		latestDate, _ := time.Parse(time.RFC3339, latestTx.Date)
+		
+		for _, tx := range matchingTransactions[1:] {
+			txDate, _ := time.Parse(time.RFC3339, tx.Date)
+			if txDate.After(latestDate) {
+				latestTx = tx
+				latestDate = txDate
+			}
+		}
+
+		txAmount, _ := strconv.ParseInt(latestTx.Amount, 10, 64)
+		return &PaymentStatus{
+			Status:    "PAID",
+			Amount:    txAmount,
+			Reference: latestTx.IssuerRef,
+			Date:      latestTx.Date,
+			BrandName: latestTx.BrandName,
+			BuyerRef:  latestTx.BuyerRef,
+		}, nil
 	}
 
 	return &PaymentStatus{
