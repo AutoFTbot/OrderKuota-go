@@ -1,24 +1,31 @@
-name: Publish Go Package
+name: Manual Publish Go Module
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:  # <-- ini memungkinkan manual trigger dari GitHub UI
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.21
-      - name: Publish to GitHub Packages
-        run: |
-          go mod tidy
-          GATEWAY_PKG=github.com/AutoFTbot/OrderKuota-go
-          GOOS=linux GOARCH=amd64 go build -o OrderKuota-go
-          # example: mengemas sebagai artifact atau mengarsipkan
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21.x'
+
+    - name: Build module (test)
+      run: |
+        go mod tidy
+        go test ./...
+        go build ./...
+
+    - name: Publish (optional)
+      run: |
+        echo "Build selesai. Siap publish jika perlu."
