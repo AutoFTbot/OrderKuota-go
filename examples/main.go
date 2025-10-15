@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/autoftbot/orderkuota-go/qris"
+	"github.com/AutoFTbot/OrderKuota-go/qris"
 )
 
 func main() {
