@@ -1,0 +1,46 @@
+name: Update Donation Badge
+
+on:
+  push:
+    paths:
+      - 'donations.json'
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+
+jobs:
+  update-badge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.19'
+          
+      - name: Calculate total donations
+        id: total
+        run: |
+          if [ -f donations.json ]; then
+            TOTAL=$(go run ci-donation/calculate-total.go)
+            echo "::set-output name=total::$TOTAL"
+          else
+            echo "::set-output name=total::0"
+          fi
+          
+      - name: Update README badge
+        uses: schneegans/dynamic-badges-action@v1.5.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: your-gist-id
+          filename: total-donations.json
+          label: Total Donations
+          message: Rp ${{ steps.total.outputs.total }}
+          color: blue
+          
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update donation badge" && git push) 

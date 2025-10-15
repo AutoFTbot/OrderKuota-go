@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -58,14 +59,28 @@ func (q *QRIS) CheckPaymentStatus(reference string, amount int64) (*PaymentStatu
 	}
 
 	// Create API URL
-	url := fmt.Sprintf("https://gateway.okeconnect.com/api/mutasi/qris/%s/%s", q.config.MerchantID, q.config.APIKey)
+	url := "https://ftvpn.me/api/mutasi"
 	log.Printf("Checking payment status for amount: %d", amount)
 
+	// Create request body
+	requestBody := map[string]string{
+		"auth_token":    q.config.AuthToken,
+		"auth_username": q.config.AuthUsername,
+	}
+	
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request body / gagal marshal request body: %v", err)
+	}
+
 	// Create request
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("POST", url, strings.NewReader(string(jsonBody)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request / gagal membuat request: %v", err)
 	}
+	
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
 
 	// Send request
 	client := &http.Client{Timeout: 10 * time.Second}

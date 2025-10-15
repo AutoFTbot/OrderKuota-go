@@ -13,9 +13,9 @@ import (
 // QRISConfig stores the configuration for QRIS operations.
 // QRISConfig menyimpan konfigurasi untuk operasi QRIS.
 type QRISConfig struct {
-	MerchantID   string // Merchant ID from payment gateway / ID merchant dari payment gateway
-	APIKey       string // API key for authentication / API key untuk autentikasi
 	BaseQrString string // Base QRIS string from merchant / Base QRIS string dari merchant
+	AuthToken    string // Authentication token for API calls / Token autentikasi untuk panggilan API
+	AuthUsername string // Authentication username for API calls / Username autentikasi untuk panggilan API
 }
 
 // QRISData stores the data needed to generate a QR code.
@@ -37,8 +37,8 @@ type QRIS struct {
 // It validates the configuration and returns an error if the configuration is invalid.
 // Fungsi ini memvalidasi konfigurasi dan mengembalikan error jika konfigurasi tidak valid.
 func NewQRIS(config QRISConfig) (*QRIS, error) {
-	if config.MerchantID == "" || config.APIKey == "" || config.BaseQrString == "" {
-		return nil, errors.New("merchantID, apiKey, and baseQrString must be filled / merchantID, apiKey, dan baseQrString harus diisi")
+	if config.BaseQrString == "" || config.AuthToken == "" || config.AuthUsername == "" {
+		return nil, errors.New("baseQrString, authToken, and authUsername must be filled / baseQrString, authToken, dan authUsername harus diisi")
 	}
 
 	if !strings.Contains(config.BaseQrString, "5802ID") {
@@ -140,10 +140,7 @@ func (q *QRIS) ValidateQRISString(qrString string) error {
 		return errors.New("invalid QRIS format: country ID not found / format QRIS tidak valid: ID negara tidak ditemukan")
 	}
 
-	// Merchant ID validation
-	if !strings.Contains(qrString, q.config.MerchantID) {
-		return errors.New("merchant ID mismatch / merchant ID tidak sesuai")
-	}
+	// Merchant ID validation removed as it's no longer required
 
 	// Amount format validation
 	if !strings.Contains(qrString, "54") {
