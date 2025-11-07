@@ -541,5 +541,5 @@ Silakan kirim pull request. Untuk perubahan besar, harap buka issue terlebih dah
 ## 📄 License / Lisensi
 
 [AutoFtBot](https://github.com/AutoFTbot/OrderKuota-go/blob/main/LICENSE) 
->>>>>>> 35fc021c36759d7ac961797d5870716555dd47af
+
 
